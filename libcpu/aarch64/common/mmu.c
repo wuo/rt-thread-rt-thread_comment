@@ -617,6 +617,9 @@ unsigned long get_free_page(void)
     return (unsigned long) (__init_page_array[__page_off++].page);
 }
 
+//为一个2M的block创建页表，页表一共有三级，其中0/1两级是for循环中创建的，descriptor中
+//只关注指向下一级的地址以及bit[1:0]。最后一级是一个block descriptor，是在for循环
+//之后创建的，直接指向最终的物理地址
 static int _map_single_page_2M(unsigned long *lv0_tbl, unsigned long va,
                                unsigned long pa, unsigned long attr,
                                rt_bool_t flush)
@@ -911,6 +914,7 @@ void rt_hw_mem_setup_early(unsigned long *tbl0, unsigned long *tbl1,
     rt_memset((char *)tbl0, 0, ARCH_PAGE_SIZE);
     rt_memset((char *)tbl1, 0, ARCH_PAGE_SIZE);
 
+    //从va 开始，为每2M空间创建页表项
     ret = _init_map_2M(tbl1, va, va + pv_off, count, normal_attr);
     if (ret != 0)
     {
