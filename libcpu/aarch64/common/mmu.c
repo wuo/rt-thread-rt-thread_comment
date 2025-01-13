@@ -897,6 +897,7 @@ void rt_hw_mem_setup_early(unsigned long *tbl0, unsigned long *tbl1,
                            unsigned long size, unsigned long pv_off)
 {
     int ret;
+    //此处加上mask值再右移是为了考虑不是整数SECTION的情况
     unsigned long count = (size + ARCH_SECTION_MASK) >> ARCH_SECTION_SHIFT;
     unsigned long normal_attr = MMU_MAP_K_RWCB;
     extern unsigned char _start;
