@@ -617,9 +617,14 @@ unsigned long get_free_page(void)
     return (unsigned long) (__init_page_array[__page_off++].page);
 }
 
-//为一个2M的block创建页表，页表一共有三级，其中0/1两级是for循环中创建的，descriptor中
-//只关注指向下一级的地址以及bit[1:0]。最后一级是一个block descriptor，是在for循环
-//之后创建的，直接指向最终的物理地址
+//为一个2M的page创建页表，页表一共有三级，其中0/1两级是在for循环中创建的，descriptor中
+//只填写指向下一级的地址以及bit[1:0]。最后一级是一个page descriptor，是在for循环
+//之后创建的，直接指向最终的页的物理地址。
+//注意：无论是几级页表，页表本身所在页的地址和传入的物理地址以及输出的虚拟地址之间是无关的，
+//即使同一级别页表所在的页，地址也不要求是连续的。
+//传入的虚拟地址的作用是提供index，从而找到descriptor，只有最后一级descriptor 中填入了物理
+//地址。
+
 static int _map_single_page_2M(unsigned long *lv0_tbl, unsigned long va,
                                unsigned long pa, unsigned long attr,
                                rt_bool_t flush)
