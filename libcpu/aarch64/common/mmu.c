@@ -618,6 +618,9 @@ unsigned long get_free_page(void)
 }
 
 //为一个2M的page创建页表，页表一共有三级，其中0级是直接传入的参数，1/2两级是for循环创建。
+//前2级页表中的descriptor是Table Descriptor，最后一级是Block Descriptor。详见ARMv8-A
+//TRM 文档8.2.8.2章节
+
 //注意：无论是几级页表，页表本身所在页的地址和传入的物理地址以及输出的虚拟地址之间是无关的，
 //即使同一级别页表所在的页，地址也不要求是连续的。
 //传入的虚拟地址的作用是提供index，从而找到descriptor，只有最后一级descriptor 中填入了物理
@@ -669,6 +672,7 @@ static int _map_single_page_2M(unsigned long *lv0_tbl, unsigned long va,
         level_shift -= MMU_LEVEL_SHIFT;
     }
     attr &= MMU_ATTRIB_MASK;
+    //注意，最后一级是Block
     pa |= (attr | MMU_TYPE_BLOCK); /* block */
     off = (va >> ARCH_SECTION_SHIFT);
     off &= MMU_LEVEL_MASK;
