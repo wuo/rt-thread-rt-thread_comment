@@ -624,7 +624,7 @@ unsigned long get_free_page(void)
 //注意：无论是几级页表，页表本身所在页的地址和传入的物理地址以及输出的虚拟地址之间是无关的，
 //即使同一级别页表所在的页，地址也不要求是连续的。
 //传入的虚拟地址的作用是提供index，从而找到descriptor，只有最后一级descriptor 中填入了物理
-//地址。
+//地址以及shareability,cacheability以及type 属性。
 
 static int _map_single_page_2M(unsigned long *lv0_tbl, unsigned long va,
                                unsigned long pa, unsigned long attr,
@@ -634,6 +634,9 @@ static int _map_single_page_2M(unsigned long *lv0_tbl, unsigned long va,
     unsigned long *cur_lv_tbl = lv0_tbl;
     unsigned long page;
     unsigned long off;
+
+    //第一次右移动39bit，所以使用的index是VA的39-47 bit，VA 的低48bit被拆分为9 + 9 + 9 + 21 
+    //前三个9 bit 依次都是作为descriptor index，最后21 bit 用于在2M空间内index 对应的byte。
     int level_shift = MMU_ADDRESS_BITS;
 
     if (va & ARCH_SECTION_MASK)
@@ -672,7 +675,9 @@ static int _map_single_page_2M(unsigned long *lv0_tbl, unsigned long va,
         level_shift -= MMU_LEVEL_SHIFT;
     }
     attr &= MMU_ATTRIB_MASK;
-    //注意，最后一级是Block
+
+    //注意，最后一级填入的是Block Descriptor, Block 大小是2M，但是ARMv8-A文档中定义的granule只有4k/16k/64k三种
+    //Page，实际上，2M Block 对应的就是4k page 的granule，所以TCR_EL1中选定granule 要设置为4K。
     pa |= (attr | MMU_TYPE_BLOCK); /* block */
     off = (va >> ARCH_SECTION_SHIFT);
     off &= MMU_LEVEL_MASK;
