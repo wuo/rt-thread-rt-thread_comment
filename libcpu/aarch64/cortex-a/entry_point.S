@@ -40,12 +40,18 @@
 
 #define _HEAD_FLAGS                         (_HEAD_FLAG(BE) | _HEAD_FLAG(PAGE_SIZE) | _HEAD_FLAG(PHYS_BASE))
 
+
+//通过adrp指令获取到的地址是以当前PC相对位置为
+//参考而获取到的symbol所在页的地址。
+//
 .macro get_phy, reg, symbol
     adrp    \reg, \symbol
     add     \reg, \reg, #:lo12:\symbol
 .endm
 
 .macro get_pvoff, tmp, out
+    //这条指令实际是一条伪指令，symbol的地址在编译时会存放在当前函数后面，作为
+    //一个立即数常量，所以这里获取到的地址是编译时确定的，可以理解为虚拟地址。
     ldr     \tmp, =.boot_cpu_stack_top
     get_phy \out, .boot_cpu_stack_top
     sub     \out, \out, \tmp
